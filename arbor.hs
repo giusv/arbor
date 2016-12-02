@@ -1,5 +1,6 @@
+-- /d/Dati/Profili/M026980/Documents/programmi/arbor
 import Language
-import Language.Insoluti
+import Language.Aia
 -- import Language.TestInterface
 -- import Language.Ecommerce
 -- import Language.Bootstrap
@@ -19,14 +20,14 @@ import qualified Data.Map as Map
 main :: IO ()
 main = 
     -- putStrLn $ show $ runState welcome (0,Map.empty)
-    let appName = "insoluti"
+    let appName = "aia"
         appFile = "app.js"
         posFile = "pose.js"
         datFile = "data.js"
         ahkFile = "presentation.ahk"
         indexFile = appName ++ ".html"
         -- init = Pose $ (seg "login" [])
-        init = Pose $ (seg "home" [])
+        init = Pose $ (seg "login" [])
         -- init = Pose $ (seg "home" [] </> (seg "navbarstd" [] <&> seg "welcome" []))
         target = "runtime/app"
         jsdir = target ++ "/js"
