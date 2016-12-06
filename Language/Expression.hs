@@ -51,6 +51,7 @@ isNull m = Expression (UnExpr Not (IdExpr m))
 isDirty :: Identifier -> Expression Bool
 isDirty m = neg (isNull m)
 
+infix 5 *==*
 (*==*) :: Eq a => Expression a -> Expression a -> Expression Bool
 (*==*) (Expression x) (Expression y) 
     = Expression (BinExpr Equals x y)
@@ -58,6 +59,8 @@ isDirty m = neg (isNull m)
 (*<*) (Expression x) (Expression y) 
     = Expression (BinExpr LessThan x y)
 
+infix 5 *&&*
+infix 4 *||*
 (*&&*):: Expression Bool -> Expression Bool -> Expression Bool
 (*&&*) = binaryOp And
 (*||*):: Expression Bool -> Expression Bool -> Expression Bool

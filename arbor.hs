@@ -27,7 +27,8 @@ main =
         ahkFile = "presentation.ahk"
         indexFile = appName ++ ".html"
         -- init = Pose $ (seg "login" [])
-        init = Pose $ (seg "login" [])
+        init = Pose $ seg "home" [] </> seg "results" ["targa" <=> string "1"]
+        -- init = Pose $ (seg "login" [])
         -- init = Pose $ (seg "home" [] </> (seg "navbarstd" [] <&> seg "welcome" []))
         target = "runtime/app"
         jsdir = target ++ "/js"

@@ -26,7 +26,7 @@ Return
 	Send main{Enter}
 Return
 ^d::
-	Send :cd C:\Users\GML\Documents\arbor{Enter}
+	Send :cd D:\Dati\Profili\m026980\Documents\arbor{Enter}
 Return 
 
 ^n:: 

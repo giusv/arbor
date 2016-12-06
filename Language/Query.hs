@@ -98,6 +98,7 @@ scheme (Binary op q1 q2)        = case op of
                                     Difference      -> attr1
                                   where attr1       = scheme q1
                                         attr2       = scheme q2
+infix 7 !
 (!) :: Rel -> Name -> Expression String
 (Rel assoc) ! attr
     = case lookup attr assoc of
@@ -158,6 +159,7 @@ a *=* (Expression expr) = (a,expr)
 
 (*@@*) :: Attribute -> Attribute -> (Attribute,Attribute)
 a *@@* b = (b,a)
+infix 5 *@*
 (*@*) ::  Expression String -> Attribute -> (Attribute,Attribute)
 (Expression (AttrExpr a)) *@* b = (b,a)
 
