@@ -1,14 +1,15 @@
 module Language.Aia where
 import Language
 --------------------- Data ---------------------
-sinistri = Table "sinistri" ["id","abi","cab","data","luogo","divisa","pid"]
--- persons = Table "soggetti" ["id","nome","cognome","datanasc","luogonasc","codfisc"]
--- requests = Table "richieste" ["id","sid","aid"]
--- states = Table "stati" ["id"]
+persone = Table "persone" ["id","cognome", "nome", "ragsoc", "luogonasc", "datanasc", "codfisc", "partiva"]
+ruoliveic = Table "ruoliveic" ["idveic","idsin","ruolo"]
+ruolipers = Table "ruolipers" ["idpers","idsin","ruolo"]
+sinistri = Table "sinistri" ["id","data","stato","luogo","autor","danni","lesioni","decessi"]
+veicoli = Table "veicoli" ["targa","telaio","dataimm"]
 
--- allStates = do
-    -- s <- table states
-    -- projectAttr s ["id"]
+allSinistri = do
+    s <- table sinistri
+    projectAttr s ["data","stato","luogo","autor","danni","lesioni","decessi"]
 
 -- allPersons = do
     -- p <- table persons
@@ -74,7 +75,7 @@ welcome = do
 
 search = do
     n <- formInput  "Codice sinistro:"    "codice"   Required (string "")
-    c <- formInput  "Targa:"              "targa"    Required (string "")
+    t <- formInput  "Targa:"              "targa"    Required (string "")
     d <- formInput  "Data inizio:"        "inizio"   Required (string "")
     l <- formInput  "Data fine:"          "fine"     Required (string "")
     cf <- formInput "Codice fiscale:"     "fcode"    (Required <%> MinLen 16 <%> MaxLen 16) (string "")
@@ -82,19 +83,51 @@ search = do
     f <- plainForm (    n <|> c 
                     <-> d <|> l 
                     <-> cf) b 
-    transition b click EmptyAction (seg "welcome" ["name" <=> string ""])
+    transition b click EmptyAction (seg "results" ["targa" <=> value t])
     return f
 
-    
-    
-    
-    
+results = do
+    slist <- list allSinistri showSinistro
+    return $ slist
 
 
+showRequest r = do
+    lid <- label (r ! "id")
+    lsid <- label (r ! "sid")
+    laid <- label (r ! "aid")
+    return $ lid <|> lsid <|> laid
     
     
+showSinistro s = do
+    lid <- label (r ! "id")
+    ldata <- label (r ! "data")
+    lstato <- label (r ! "stato")
+    lluogo <- label (r ! "luogo")
+    lautor <- label (r ! "autor")
+    ldanni <- label (r ! "danni")
+    llesioni <- label (r ! "lesioni")
+    ldecessi <- label (r ! "decessi")
+    return $ (lid  <|> ldata <|> lstato <|> lluogo <|> lautor <|> ldanni <|> llesioni <|> ldecessi)
+
+initSinistri = do
+    insert $ "id" *=* (string "01") : "aid" *=* (string "41") : "sid" *=* (string "attesa")      : []
     
     
+"id" *=* string "" : "data" *=* string "" : "stato" *=* string "" : "luogo" *=* string "" : "autor" *=* string "" : "danni" *=* string "" : "lesioni" *=* string "" : "decessi" *=* string "" :     
+"id" *=* string "" : "data" *=* string "" : "stato" *=* string "" : "luogo" *=* string "" : "autor" *=* string "" : "danni" *=* string "" : "lesioni" *=* string "" : "decessi" *=* string "" :     
+"id" *=* string "" : "data" *=* string "" : "stato" *=* string "" : "luogo" *=* string "" : "autor" *=* string "" : "danni" *=* string "" : "lesioni" *=* string "" : "decessi" *=* string "" :     
+"id" *=* string "" : "data" *=* string "" : "stato" *=* string "" : "luogo" *=* string "" : "autor" *=* string "" : "danni" *=* string "" : "lesioni" *=* string "" : "decessi" *=* string "" :     
+"id" *=* string "" : "data" *=* string "" : "stato" *=* string "" : "luogo" *=* string "" : "autor" *=* string "" : "danni" *=* string "" : "lesioni" *=* string "" : "decessi" *=* string "" :     
+"id" *=* string "" : "data" *=* string "" : "stato" *=* string "" : "luogo" *=* string "" : "autor" *=* string "" : "danni" *=* string "" : "lesioni" *=* string "" : "decessi" *=* string "" :     
+"id" *=* string "" : "data" *=* string "" : "stato" *=* string "" : "luogo" *=* string "" : "autor" *=* string "" : "danni" *=* string "" : "lesioni" *=* string "" : "decessi" *=* string "" :     
+"id" *=* string "" : "data" *=* string "" : "stato" *=* string "" : "luogo" *=* string "" : "autor" *=* string "" : "danni" *=* string "" : "lesioni" *=* string "" : "decessi" *=* string "" :     
+"id" *=* string "" : "data" *=* string "" : "stato" *=* string "" : "luogo" *=* string "" : "autor" *=* string "" : "danni" *=* string "" : "lesioni" *=* string "" : "decessi" *=* string "" :     
+"id" *=* string "" : "data" *=* string "" : "stato" *=* string "" : "luogo" *=* string "" : "autor" *=* string "" : "danni" *=* string "" : "lesioni" *=* string "" : "decessi" *=* string "" :     
+"id" *=* string "" : "data" *=* string "" : "stato" *=* string "" : "luogo" *=* string "" : "autor" *=* string "" : "danni" *=* string "" : "lesioni" *=* string "" : "decessi" *=* string "" :     
+"id" *=* string "" : "data" *=* string "" : "stato" *=* string "" : "luogo" *=* string "" : "autor" *=* string "" : "danni" *=* string "" : "lesioni" *=* string "" : "decessi" *=* string "" :     
+"id" *=* string "" : "data" *=* string "" : "stato" *=* string "" : "luogo" *=* string "" : "autor" *=* string "" : "danni" *=* string "" : "lesioni" *=* string "" : "decessi" *=* string "" :     
+"id" *=* string "" : "data" *=* string "" : "stato" *=* string "" : "luogo" *=* string "" : "autor" *=* string "" : "danni" *=* string "" : "lesioni" *=* string "" : "decessi" *=* string "" :     
+"id" *=* string "" : "data" *=* string "" : "stato" *=* string "" : "luogo" *=* string "" : "autor" *=* string "" : "danni" *=* string "" : "lesioni" *=* string "" : "decessi" *=* string "" :     
     
     
     
@@ -147,56 +180,56 @@ search = do
     -- insert $ "id" *=* (string "30") : "aid" *=* (string "02") : "sid" *=* (string "conclusa")    : []
 -- initChecks = do                                          
     -- into checks                
-    -- insert $ "id" *=* (string "01") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "02") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "03") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
-    -- insert $ "id" *=* (string "04") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "05") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "06") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "07") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "08") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
-    -- insert $ "id" *=* (string "09") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "10") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "11") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "12") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "13") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
-    -- insert $ "id" *=* (string "14") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "15") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "16") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "17") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "18") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
-    -- insert $ "id" *=* (string "19") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "20") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "21") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "22") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "23") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
-    -- insert $ "id" *=* (string "24") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "25") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "26") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "27") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "28") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
-    -- insert $ "id" *=* (string "29") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "30") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "31") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "32") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "33") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
-    -- insert $ "id" *=* (string "34") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "35") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "36") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "37") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "38") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
-    -- insert $ "id" *=* (string "39") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "40") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "41") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "42") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "43") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
-    -- insert $ "id" *=* (string "44") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "45") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "46") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "47") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
-    -- insert $ "id" *=* (string "48") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
-    -- insert $ "id" *=* (string "49") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
-    -- insert $ "id" *=* (string "50") : "abi" *=* (string "00100") :  "cab" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "01") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "02") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "03") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
+    -- insert $ "id" *=* (string "04") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "05") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "06") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "07") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "08") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
+    -- insert $ "id" *=* (string "09") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "10") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "11") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "12") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "13") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
+    -- insert $ "id" *=* (string "14") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "15") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "16") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "17") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "18") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
+    -- insert $ "id" *=* (string "19") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "20") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "21") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "22") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "23") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
+    -- insert $ "id" *=* (string "24") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "25") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "26") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "27") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "28") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
+    -- insert $ "id" *=* (string "29") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "30") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "31") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "32") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "33") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
+    -- insert $ "id" *=* (string "34") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "35") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "36") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "37") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "38") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
+    -- insert $ "id" *=* (string "39") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "40") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "41") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "42") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "43") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
+    -- insert $ "id" *=* (string "44") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "45") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "46") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "47") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
+    -- insert $ "id" *=* (string "48") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "3") : []
+    -- insert $ "id" *=* (string "49") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "1") : []
+    -- insert $ "id" *=* (string "50") : "luogo" *=* (string "00100") :  "data" *=* (string "00120") : "data" *=* (string "01/01/2000") : "luogo" *=* (string "Roma") : "divisa" *=* (string "EUR") : "pid" *=* (string "2") : []
 -- initPersons = do                                          
     -- into persons
     -- insert $ "id" *=* (string "1") : "nome" *=* (string "nome1") : "cognome" *=* (string "cognome1") : "datanasc" *=* (string "01/01/2000") : "luogonasc" *=* (string "Roma") : "codfisc" *=* (string "DJFEIKA78L34Y4784C") : []

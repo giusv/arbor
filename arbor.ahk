@@ -26,7 +26,7 @@ Return
 	Send main{Enter}
 Return
 ^d::
-	Send :cd D:\Dati\Profili\M026980\Documents\programmi\arbor{Enter}
+	Send :cd C:\Users\GML\Documents\arbor{Enter}
 Return 
 
 ^n:: 
@@ -39,6 +39,9 @@ Return
 
 ^j:: 
 	WinActivate, JBoss
+Return
+^!r::
+    Reload
 Return
 ;^r:: Send :: Parser {Enter}
 ;	= do {{}{Enter}{Space}{Space}{Space}{Space}{Space};{Enter};{Enter};{Enter};{Enter}{}{Enter}
