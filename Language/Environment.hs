@@ -302,6 +302,7 @@ runInterpList ev env = runIdentity (runExceptT (runReaderT ev env))
                 -- deriving (Eq,Show)
 data Context = EmptyContext
              | ListContext Name 
+             | TableContext Name 
              | PlainFormContext Name 
              | QueryFormContext Name 
              deriving (Eq,Show)

@@ -13,55 +13,76 @@ login = do
     nm  <- formInput  "Utente:"             "name"           Required (string "")
     pwd <- formInput  "Password:"           "password"       Required (string "")
     acc <- button (string "Accedi")
-    accTrans <- transition acc Click EmptyAction (seg "home" [] </> seg "welcome" ["name" <=> value nm])
+    accTrans <- transition acc Click EmptyAction (seg "home" [] </> seg "welcome" [])
     f <- plainForm (    nm
                     <-> pwd) acc
     return f
 
 nav = do
-    hb <- link "Home"    (seg "home" [] </> seg "welcome" ["name" <=> string ""])
-    sb <- link "Ricerca" (seg "home" [] </> seg "search"  [])
-    nb <- navbar [hb,sb]
+    hb <- link "Home"    (seg "home" [] </> seg "welcome" [])
+    ttb <- link "Test"    (seg "home" [] </> seg "test" [])
+    tb <- link "Ricerca Soggetti coinvolti" (seg "home" [] </> seg "searchbynome"  [])
+    sb <- link "Ricerca Identificativi veicolo" (seg "home" [] </> seg "searchbytarga"  [])
+    nb <- navbar [hb,tb,sb,ttb]
     return nb
     
 home = do
     n <- nav
     w <- welcome
-    s <- search
-    r <- results
+    t <- test
+    st <- searchbytarga
+    rt <- resultsbytarga
+    sn <- searchbynome
+    rn <- resultsbynome
     a <- alternative [ w <@> "welcome"
-                     , s <@> "search"
-                     , r <@> "results"
+                     , t <@> "test"
+                     , st <@> "searchbytarga"
+                     , rt <@> "resultsbytarga"
+                     , sn <@> "searchbynome"
+                     , rn <@> "resultsbynome"
                      ]
     return $ n 
          <-> a
 
+
 welcome = do
-    name <- parameter "name"
-    hello <- label (param name)
-    return $ name <\> hello
+    sbn <- link "Vai alla pagina" (seg "home" [] </> seg "searchbynome"  [])
+    sbt <- link "Vai alla pagina" (seg "home" [] </> seg "searchbytarga"  [])
+    searchbytarga <- panel "primary" sbt (string "Ricerca identificativi veicolo")
+    searchbynome <- panel "danger" sbn (string "Ricerca per nominativo")
+    return $ searchbytarga <|> searchbynome
 
-search = do
-    inp <- input "Targa:" (string "")
-    but <- button (string "Cerca")
-    transition but click none (seg "home" [] </> seg "results" ["targa" <=> (value inp)])
-    return $ inp 
-         <-> but
-
-search' = do
-    n <- formInput  "Codice sinistro:"    "codice"   Required (string "")
-    t <- formInput  "Targa:"              "targa"    Required (string "")
-    d <- formInput  "Data inizio:"        "inizio"   Required (string "")
-    l <- formInput  "Data fine:"          "fine"     Required (string "")
-    cf <- formInput "Codice fiscale:"     "fcode"    (Required <%> MinLen 16 <%> MaxLen 16) (string "")
+searchbytarga = do
+    t <- input  "Targa:"       (string "")
+    d <- input  "Data inizio:" (string "")
+    l <- input  "Data fine:"   (string "")
     b <- button (string "Invio")
-    f <- plainForm (    n <|> t 
-                    <-> d <|> l 
-                    <-> cf) b 
-    transition b click EmptyAction (seg "home" [] </> seg "results" ["targa" <=> value t])
-    return f
+    transition b click EmptyAction (seg "home" [] </> seg "resultsbytarga" ["targa" <=> value t])
+    return $ t 
+         <-> d 
+         <-> l
+         <-> b 
+         
+    
+test = do
+    l <- label $ string "test"
+    return l
+    
+    
+searchbynome = do
+    n <- input  "Codice sinistro:"  (string "")
+    d <- input  "Data inizio:"      (string "")
+    l <- input  "Data fine:"        (string "")
+    c <- input "Codice fiscale:"    (string "")
+    b <- button (string "Invio")
+    transition b click EmptyAction (seg "home" [] </> seg "resultsbynome" ["nome" <=> value c])
+    return $ n 
+         <-> d 
+         <-> l 
+         <-> c
+         <-> b 
 
-results = do
+resultsbytarga = do
     t <- parameter "targa"
     l <- label (param t)
     lid <- label (string "id")
@@ -73,8 +94,26 @@ results = do
     llesioni <- label (string "lesioni")
     ldecessi <- label (string "decessi")
     lpersone <- label (string "persone")
-    slist <- list allSinistri showSinistro
+    slist <- htable allSinistri showSinistroTable
     return $ t <\> l
+               <-> (lid  <|> ldata <|> lstato <|> lluogo <|> lautor <|> ldanni <|> llesioni <|> ldecessi <|> lpersone)
+               <-> slist
+
+
+resultsbynome = do
+    n <- parameter "nome"
+    l <- label (param n)
+    lid <- label (string "id")
+    ldata <- label (string "data")
+    lstato <- label (string "stato")
+    lluogo <- label (string "luogo")
+    lautor <- label (string "autor")
+    ldanni <- label (string "danni")
+    llesioni <- label (string "lesioni")
+    ldecessi <- label (string "decessi")
+    lpersone <- label (string "persone")
+    slist <- list allSinistri showSinistro
+    return $ n <\> l
                <-> (lid  <|> ldata <|> lstato <|> lluogo <|> lautor <|> ldanni <|> llesioni <|> ldecessi <|> lpersone)
                <-> slist
 
@@ -98,10 +137,20 @@ showSinistro r = do
     plist <- list (personeBySinistro (value lid)) showPersona
     return $ (lid  <|> ldata <|> lstato <|> lluogo <|> lautor <|> ldanni <|> llesioni <|> ldecessi <|> plist)
 
+showSinistroTable r = do
+    lid <- label (r ! "idSinistro")
+    ldata <- label (r ! "data")
+    lstato <- label (r ! "stato")
+    lluogo <- label (r ! "luogo")
+    lautor <- label (r ! "autor")
+    ldanni <- label (r ! "danni")
+    llesioni <- label (r ! "lesioni")
+    ldecessi <- label (r ! "decessi")
+    return $ (lid .*. ldata .*. lstato .*. lluogo .*. lautor .*. ldanni .*. llesioni .*. ldecessi .*. HNil)
+
 showPersona p = do
-    lnome <- label (p ! "nome")
-    lcognome <- label (p ! "cognome")
-    return $ lnome <|> lcognome
+    lab <- label ((p ! "nome") .+. (p ! "cognome"))
+    return $ lab
     
     
     
@@ -113,7 +162,21 @@ ruolipers = Table "ruolipers" ["idpers","idsin","ruolo"]
 sinistri = Table "sinistri" ["idSinistro","data","stato","luogo","autor","danni","lesioni","decessi"]
 veicoli = Table "veicoli" ["targa","telaio","dataimm"]
 
+------ Query -----------
+allSinistri = do
+    s <- table sinistri
+    projectAttr s ["idSinistro","data","stato","luogo","autor","danni","lesioni","decessi"]
 
+personeBySinistro s = do
+    r <- table ruolipers
+    p <- table persone
+    restrict ((r ! "idsin" *==* s) *&&* (p ! "idPersona" *==* r ! "idpers"))
+    project [ p ! "nome" *@* "nome"
+            , p ! "cognome" *@* "cognome"
+            ]
+
+            
+---- initialization ----
 model = [initSinistri,initRuolipers,initPersone]
 initSinistri = do
     into sinistri
@@ -139,15 +202,3 @@ initPersone = do
     insert $ "idPersona" *=* string "0" : "cognome" *=* string "Rossi" : "nome" *=* string "Mario" : "ragsoc" *=* string "***" : "luogonasc" *=* string "Roma" : "datanasc" *=* string "17/02/1980" : "codfisc" *=* string "RSSMRI80D45H789N" : "partiva" *=* string "***" : []
     insert $ "idPersona" *=* string "1" : "cognome" *=* string "Bianchi" : "nome" *=* string "Sergio" : "ragsoc" *=* string "***" : "luogonasc" *=* string "Roma" : "datanasc" *=* string "17/02/1960" : "codfisc" *=* string "BNCSRG60D45H789N" : "partiva" *=* string "***" : []
    
------- Query -----------
-allSinistri = do
-    s <- table sinistri
-    projectAttr s ["idSinistro","data","stato","luogo","autor","danni","lesioni","decessi"]
-
-personeBySinistro s = do
-    r <- table ruolipers
-    p <- table persone
-    restrict ((r ! "idsin" *==* s) *&&* (p ! "idPersona" *==* r ! "idpers"))
-    project [ p ! "nome" *@* "nome"
-            , p ! "cognome" *@* "cognome"
-            ]

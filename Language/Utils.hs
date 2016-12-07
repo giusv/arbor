@@ -139,6 +139,8 @@ generateDataService' cmds = do
       $$ text "    }"
       $$ text "    return this;"
       $$ text "}"
+      $$ text "Object.prototype.toSource "
+      $$ text "    || (Object.prototype.toSource = function(){return JSON.stringify(this);})"
       $$ text "Array.prototype.update = function(condition,value) {"
       $$ text "    for(var i = this.length - 1; i >= 0; i--) {"
       $$ text "        if(condition(this[i])) {"

@@ -9,13 +9,15 @@ data Expr   = IdExpr Identifier
             | UnExpr UnaryOp Expr
           deriving (Eq,Show)
 data BinaryOp   = Equals | LessThan 
-                | And | Or deriving (Eq)
+                | And | Or 
+                | Append 
+                deriving (Eq)
 instance Show BinaryOp where
     show Equals     = "=="
     show LessThan   = "<"
     show And        = "&&"
     show Or         = "||"
-    
+    show Append     = "+"
 data UnaryOp = Not deriving (Eq)
 
 instance Show UnaryOp where
@@ -68,6 +70,10 @@ infix 4 *||*
 neg:: Expression Bool -> Expression Bool
 neg = unaryOp Not
 
+
+(.+.):: Expression String -> Expression String -> Expression String
+(.+.) = binaryOp Append
+            
 sq :: String -> String
 sq s@[c]                     = s
 sq ('"':s)  | last s == '"'  = init s

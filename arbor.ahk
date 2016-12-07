@@ -26,14 +26,14 @@ Return
 	Send main{Enter}
 Return
 ^d::
-	Send :cd D:\Dati\Profili\m026980\Documents\arbor{Enter}
+	Send :cd D:\Dati\Profili\M026980\Documents\programmi\arbor{Enter}
 Return 
 
 ^n:: 
 	WinActivate, Notepad
 Return
 ^m:: 
-	WinActivate, Mozilla
+	WinActivate, aia
     Send {F5}
 Return
 
