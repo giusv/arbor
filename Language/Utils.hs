@@ -66,8 +66,11 @@ generateIndex' name element = do
          $$ text "<script src=\"js/data.js\"></script>"
          $$ text "<script src=\"js/pose.js\"></script>"
          $$ text "<body id=\"body\">"
-         $$ nest 4 (text (printf "<h1>%s</h1>" name))
-         $$ nest 4 (text "<dir-interface></dir-interface>")
+         
+         $$ nest 4 (text "<div class=\"container-fluid\">"
+         $$ nest 4 (text (printf "<h1>%s</h1>" name)
+         $$ text "<dir-interface></dir-interface>")
+         $$ text "</div>")
          $$ text "</body>")
          $$ text "</html>"
  

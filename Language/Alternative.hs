@@ -83,7 +83,7 @@ instance Renderable Alternative where
                 where generateDiv (name,Element elem) =
                         do path <- fmap getPath ask
                            elem' <- local (\(Environment m p c s) -> (Environment m (p ++ [name]) c s)) (template elem)
-                           return $ text (printf "+ '<div class=\"container\" ng-if=\"match(\\'%s\\')\">'" ("/" ++ (intercalate "/" (path ++ [name]))))
+                           return $ text (printf "+ '<div ng-if=\"match(\\'%s\\')\">'" ("/" ++ (intercalate "/" (path ++ [name]))))
                                  -- $$ nest 4 elem'
                                  $$ nest 4 (text "+ '<dir-" <> text name <> text ">" <> text "</dir-" <> text name <> text ">'")
                                  $$ text "+ '</div>'"

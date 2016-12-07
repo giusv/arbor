@@ -95,7 +95,7 @@ showSinistro r = do
     ldanni <- label (r ! "danni")
     llesioni <- label (r ! "lesioni")
     ldecessi <- label (r ! "decessi")
-    plist <- list (personeBySinistro (r ! "idSinistro")) showPersona
+    plist <- list (personeBySinistro (value lid)) showPersona
     return $ (lid  <|> ldata <|> lstato <|> lluogo <|> lautor <|> ldanni <|> llesioni <|> ldecessi <|> plist)
 
 showPersona p = do
