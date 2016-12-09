@@ -20,22 +20,22 @@ login = do
 
 nav = do
     hb <- link "Home"    (seg "home" [] </> seg "welcome" [])
-    ttb <- link "Test"    (seg "home" [] </> seg "test" [])
+    -- ttb <- link "Test"    (seg "home" [] </> seg "test" [])
     tb <- link "Ricerca Soggetti coinvolti" (seg "home" [] </> seg "searchbynome"  [])
     sb <- link "Ricerca Identificativi veicolo" (seg "home" [] </> seg "searchbytarga"  [])
-    nb <- navbar [hb,tb,sb,ttb]
+    nb <- navbar [hb,tb,sb]
     return nb
     
 home = do
     n <- nav
     w <- welcome
-    t <- test
+    -- t <- test
     st <- searchbytarga
     rt <- resultsbytarga
     sn <- searchbynome
     rn <- resultsbynome
     a <- alternative [ w <@> "welcome"
-                     , t <@> "test"
+                     -- , t <@> "test"
                      , st <@> "searchbytarga"
                      , rt <@> "resultsbytarga"
                      , sn <@> "searchbynome"
@@ -62,13 +62,7 @@ searchbytarga = do
          <-> d 
          <-> l
          <-> b 
-         
-    
-test = do
-    l <- label $ string "test"
-    return l
-    
-    
+  
 searchbynome = do
     n <- input  "Codice sinistro:"  (string "")
     d <- input  "Data inizio:"      (string "")
@@ -84,27 +78,14 @@ searchbynome = do
 
 resultsbytarga = do
     t <- parameter "targa"
-    l <- label (param t)
-    lid <- label (string "id")
-    ldata <- label (string "data")
-    lstato <- label (string "stato")
-    lluogo <- label (string "luogo")
-    lautor <- label (string "autor")
-    ldanni <- label (string "danni")
-    llesioni <- label (string "lesioni")
-    ldecessi <- label (string "decessi")
-    lpersone <- label (string "persone")
-    stable <- htable allSinistri showSinistroTable
-    return $ t <\> l
-               <-> stable
+    stable <- htable (sinistriByTarga (param t)) showSinistroTable
+    return $ t <\> stable
 
 
 resultsbynome = do
     n <- parameter "nome"
-    l <- label (param n)
-    stable <- htable allSinistri showSinistroTable
-    return $ n <\> l
-               <-> stable
+    stable <- htable (sinistriByNome (param n)) showSinistroTable
+    return $ n <\> stable
 
 showSinistroTable r = do
     lid <- label (r ! "idSinistro")
@@ -116,17 +97,27 @@ showSinistroTable r = do
     llesioni <- label (r ! "lesioni")
     ldecessi <- label (r ! "decessi")
     ptable <- htable (personeBySinistro (value lid)) showPersonaTable
-    return $ lid .*. ldata .*. lstato .*. lluogo .*. lautor .*. ldanni .*. llesioni .*. ldecessi .*. ptable .*. HNil
+    vtable <- htable (veicoliBySinistro (value lid)) showVeicoloTable
+    return $ lid .*. ldata .*. lstato .*. lluogo .*. lautor .*. ldanni .*. llesioni .*. ldecessi .*. ptable .*. vtable .*. HNil
 
-showPersona p = do
-    lab <- label ((p ! "nome") .+. (p ! "cognome"))
-    return $ lab
-    
+-- labels :: HList l => Rel -> [String] -> l
+-- labels r ls = do 
+    -- ls' <- sequence $ map (\l -> label (r ! l)) ls
+    -- return $ hBuild ls'
+-- hBuild :: HList l => [a] -> l
+-- hBuild [] = HNil
+-- hBuild (x:xs) = HCons x (hBuild xs)
+
 
 showPersonaTable p = do
     lnome <- label (p ! "nome") 
     lcognome <- label (p ! "cognome")
     return $ lnome .*. lcognome .*. HNil
+    
+showVeicoloTable v = do
+    ltarga <- label (v ! "targa") 
+    ltelaio <- label (v ! "telaio")
+    return $ ltarga .*. ltelaio .*. HNil
     
     
     
@@ -139,9 +130,34 @@ sinistri = Table "sinistri" ["idSinistro","data","stato","luogo","autor","danni"
 veicoli = Table "veicoli" ["targa","telaio","dataimm"]
 
 ------ Query -----------
-allSinistri = do
+sinistriByTarga t = do
     s <- table sinistri
-    projectAttr s ["idSinistro","data","stato","luogo","autor","danni","lesioni","decessi"]
+    r <- table ruoliveic
+    v <- table veicoli
+    restrict ((v ! "targa" *==* t) *&&* ((r ! "idveic" *==* v ! "targa") *&&* (s ! "idSinistro" *==* r ! "idsin")))
+    project [ s ! "idSinistro" *@* "idSinistro"
+            , s ! "data" *@* "data"
+            , s ! "stato" *@* "stato"
+            , s ! "luogo" *@* "luogo"
+            , s ! "autor" *@* "autor"
+            , s ! "danni" *@* "danni"
+            , s ! "decessi" *@* "decessi"
+            , s ! "lesioni" *@* "lesioni"
+            ]
+sinistriByNome n = do
+    s <- table sinistri
+    r <- table ruolipers
+    p <- table persone
+    restrict ((p ! "cognome" *==* n) *&&* ((r ! "idpers" *==* p ! "idPersona") *&&* (s ! "idSinistro" *==* r ! "idsin")))
+    project [ s ! "idSinistro" *@* "idSinistro"
+            , s ! "data" *@* "data"
+            , s ! "stato" *@* "stato"
+            , s ! "luogo" *@* "luogo"
+            , s ! "autor" *@* "autor"
+            , s ! "danni" *@* "danni"
+            , s ! "decessi" *@* "decessi"
+            , s ! "lesioni" *@* "lesioni"
+            ]
 
 personeBySinistro s = do
     r <- table ruolipers
@@ -151,9 +167,17 @@ personeBySinistro s = do
             , p ! "cognome" *@* "cognome"
             ]
 
+veicoliBySinistro s = do
+    r <- table ruoliveic
+    v <- table veicoli
+    restrict ((r ! "idsin" *==* s) *&&* (v ! "targa" *==* r ! "idveic"))
+    project [ v ! "targa" *@* "targa"
+            , v ! "telaio" *@* "telaio"
+            ]
+
             
 ---- initialization ----
-model = [initSinistri,initRuolipers,initPersone]
+model = [initSinistri,initRuolipers,initPersone,initVeicoli,initRuoliveic]
 initSinistri = do
     into sinistri
     insert $ "idSinistro" *=* string "0" : "data" *=* string "01/12/2015" : "stato" *=* string "liquidato" : "luogo" *=* string "Roma" : "autor" *=* string "si" : "danni" *=* string "no" : "lesioni" *=* string "no" : "decessi" *=* string "no" : []    
@@ -177,4 +201,14 @@ initPersone = do
     into persone
     insert $ "idPersona" *=* string "0" : "cognome" *=* string "Rossi" : "nome" *=* string "Mario" : "ragsoc" *=* string "***" : "luogonasc" *=* string "Roma" : "datanasc" *=* string "17/02/1980" : "codfisc" *=* string "RSSMRI80D45H789N" : "partiva" *=* string "***" : []
     insert $ "idPersona" *=* string "1" : "cognome" *=* string "Bianchi" : "nome" *=* string "Sergio" : "ragsoc" *=* string "***" : "luogonasc" *=* string "Roma" : "datanasc" *=* string "17/02/1960" : "codfisc" *=* string "BNCSRG60D45H789N" : "partiva" *=* string "***" : []
+   
+initRuoliveic = do
+    into ruoliveic
+    insert $ "idveic" *=* string "a" : "idsin" *=* string "1" : "ruolo" *=* string "coinvolto" : []        
+    insert $ "idveic" *=* string "b" : "idsin" *=* string "1" : "ruolo" *=* string "danneggiato" : []        
+    
+initVeicoli = do
+    into veicoli
+    insert $ "targa" *=* string "a" : "telaio" *=* string "qwerty" : "dataimm" *=* string "20/05/1988" : []
+    insert $ "targa" *=* string "b" : "telaio" *=* string "asdfgh" : "dataimm" *=* string "20/05/1989" : []
    

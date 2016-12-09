@@ -27,7 +27,7 @@ main =
         ahkFile = "presentation.ahk"
         indexFile = appName ++ ".html"
         -- init = Pose $ (seg "login" [])
-        init = Pose $ seg "home" [] </> seg "resultsbytarga" ["targa" <=> string "1"]
+        init = Pose $ seg "home" [] </> seg "resultsbytarga" ["targa" <=> string "a"]
         -- init = Pose $ seg "home" [] </> seg "welcome" []
         -- init = Pose $ (seg "login" [])
         -- init = Pose $ (seg "home" [] </> (seg "navbarstd" [] <&> seg "welcome" []))
