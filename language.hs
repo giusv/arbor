@@ -24,7 +24,7 @@ module Language (
     , module Language.Elements.Panel
     , module Language.Elements.Aggregate
     , module Language.Elements.List
-    , module Language.Elements.HTable
+    , module Language.Elements.Htable
     , module Language.Elements.Tabular
     , module Language.Elements.Dropdown
     , module Language.Elements.Chart
@@ -56,7 +56,7 @@ import Language.Elements.Label
 import Language.Elements.Panel
 import Language.Elements.Aggregate
 import Language.Elements.List
-import Language.Elements.HTable
+import Language.Elements.Htable
 import Language.Elements.Tabular
 import Language.Elements.Dropdown
 import Language.Elements.Chart

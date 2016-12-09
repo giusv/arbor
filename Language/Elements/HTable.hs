@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeOperators #-}
-module Language.Elements.HTable where
+module Language.Elements.Htable where
 import Language.Commons
 import Language.Expression
 import Language.Query
@@ -19,20 +19,20 @@ import Data.Maybe
 import qualified Data.Map as Map
 import Debug.Trace
 
-data HTable a = HTable Identifier (Query Rel) (Rel -> SElement a)
-instance (Show a) => Show (HTable a) where
-    -- show (HTable id q f) = "HTable " ++ " (" ++ show id ++ " " ++ show (evalState (f (evalState q (0,EmptyQuery))) (id ++ "",0,Map.empty)) ++ ")"
-    show (HTable id _ _) = "(hTable " ++ show id ++ ")"
+data Htable a = Htable Identifier (Query Rel) (Rel -> SElement a)
+instance (Show a) => Show (Htable a) where
+    -- show (Htable id q f) = "Htable " ++ " (" ++ show id ++ " " ++ show (evalState (f (evalState q (0,EmptyQuery))) (id ++ "",0,Map.empty)) ++ ")"
+    show (Htable id _ _) = "(htable " ++ show id ++ ")"
     
-instance Eq (HTable a) where
-    (HTable id1 _ _) == (HTable id2 _ _) = id1 == id2
+instance Eq (Htable a) where
+    (Htable id1 _ _) == (Htable id2 _ _) = id1 == id2
     
-instance Alternable (HTable a)
+instance Alternable (Htable a)
 
-htable :: (Alternable a, HList a) => Query Rel -> (Rel -> SElement a) -> SElement (HTable a)
+htable :: (Alternable a, HList a) => Query Rel -> (Rel -> SElement a) -> SElement (Htable a)
 htable q f = do pref <- fmap first3 get
                 i <- nextIndex
-                return $ HTable (pref ++ "hTable" ++ show i) q f
+                return $ Htable (pref ++ "htable" ++ show i) q f
 
 data HNil = HNil deriving (Eq,Show,Read)
 data HCons e l = HCons e l deriving (Eq,Show,Read)
@@ -51,6 +51,7 @@ instance Renderable HNil where
     controller  _ = return empty
     references  _ = return []   
     identifiers _ = return []   
+    modules     _ = []
     toElementList _ = []
 
 instance (Renderable e, Renderable l) => Renderable (HCons e l) where
@@ -58,13 +59,14 @@ instance (Renderable e, Renderable l) => Renderable (HCons e l) where
     template (HCons e l) = do
         e' <- template e
         l' <- template l
-        return $  text "+ '<td>'"
-               $$ e'
-               $$ text "+ '</td>'"
+        return $  text "+ '<div class=\"table-cell\">'"
+               $$ nest 4 e'
+               $$ text "+ '</div>'"
                $$ l'
     controller (HCons e l) = liftM2 ($$) (controller e) (controller l)
     references (HCons e l) = liftM2 (++) (references e) (references l)
     identifiers (HCons e l) = liftM2 (++) (identifiers e) (identifiers l)
+    modules (HCons e l) = modules e ++ modules l
     toElementList (HCons e l) = toElementList e ++ toElementList l
 
 instance Alternable HNil
@@ -87,25 +89,25 @@ instance Presentable HNil
 instance (Presentable e, Presentable l) => Presentable (HCons e l)
     where present _ = return empty
 
-instance (Submittable a) => Submittable (HTable a) where
-    submission (HTable id q f) =
+instance (Submittable a) => Submittable (Htable a) where
+    submission (Htable id q f) =
         let (rel,(_,pq)) = runState q (0,EmptyQuery)
             elem = evalState (f rel) (id ++ "",0,Map.empty)
         in  submission elem
         
-instance (Renderable a) => Renderable (HTable a) where
+instance (Renderable a) => Renderable (Htable a) where
                                         
-    references (HTable id q f) = do
+    references (Htable id q f) = do
         let (rel,(_,pq)) = runState q (0,EmptyQuery)
         let e = evalState (f rel) (id ++ "",0,Map.empty)
         references e
     
-    identifiers (HTable id q f) = do
+    identifiers (Htable id q f) = do
         let (rel,(_,pq)) = runState q (0,EmptyQuery)
         let e = evalState (f rel) (id ++ "",0,Map.empty)
         identifiers e
     
-    directives (HTable id q f) = do
+    directives (Htable id q f) = do
         let (rel,(_,pq)) = runState q (0,EmptyQuery)
         -- let helems = evalState (f rel) (id ++ "",0,Map.empty)
         let (helems,(_,_,transitions)) = runState (f rel) (id ++ "",0,Map.empty)
@@ -113,19 +115,25 @@ instance (Renderable a) => Renderable (HTable a) where
         temp <- local update (template helems)
         ctrl <- local update (controller helems)
         ctx <- fmap getContext ask
-        classes <- fmap getClasses ask
-        let dir = text (printf "angular.module('%s', ['pose','data'])" id) -- traceShow ("in directive HTable: " ++ show (model helems)) $ 
+        classes <- traceShow rel $ fmap getClasses ask
+        let headers = let (Rel r) = rel in vcat $ map (\(h,_) -> text "+ '<div class=\"table-cell\">'"
+                                               $$ nest 4 (text ("+ '" ++  h ++ "'"))
+                                               $$ text "+ '</div>'") r
+        let dir = text (printf "angular.module('%s', ['pose','data'])" id) -- traceShow ("in directive Htable: " ++ show (model helems)) $ 
                $$ nest 4 (text (printf ".directive('dir%s', function() {" (capitalize id))
                $$ nest 4 (text "return {"
                $$ nest 4 (text "scope: {context: '='},"
-               $$ text "template: '<table class=\"table table-striped\"" <+> hsep (map text classes) <> text "\">'"
-               $$ nest 4 (text "+ '<thead>'"
-               $$ text "+ '</thead>'")
-               $$ nest 4 (text "+ '<tbody>'"
-               $$ nest 4 (text "+ '<tr ng-repeat=\"obj in context\">'"
+               $$ text "template: '<div class=\"table" <+> hsep (map text classes) <> text "\">'"
+               $$ nest 4 (text "+ '<div class=\"table-row\">'"
+               $$ nest 4 headers
+               $$ text "+ '</div>'")
+               -- $$ nest 4 (text "+ '<tbody>'"
+               $$ nest 4 (text "+ '<div class=\"table-row\" ng-repeat=\"obj in context\">'"
                $$ nest 4 temp
-               $$ text "+ '</tr>'")
-               $$ text "+ '</tbody>'") <> comma
+               $$ text "+ '</div>'")
+               $$ text "+ '</div>'"
+               -- $$ text "+ '</tbody>'") 
+               <> comma
                $$ text "replace: true,"
                $$ text (printf "controller: '%sController'," id)
                $$ text "controllerAs: 'ctrl'")
@@ -140,13 +148,13 @@ instance (Renderable a) => Renderable (HTable a) where
         dirs <- local update (directives helems)
         return (dir:dirs)
 
-    template (HTable id q f) = do
+    template (Htable id q f) = do
         ctx <- fmap getContext ask
         case ctx of 
             EmptyContext -> return $ text "+ '<dir-" <> text id <+> text "context=\""<> text id <> text "\">" <> text "</dir-" <> text id <> text ">'"
             ListContext _ -> return $ text "+ '<dir-" <> text id <+> text "context=\""<> text id <> text "[$index]\">" <> text "</dir-" <> text id <> text ">'"
                                  
-    controller (HTable id q f) = do
+    controller (Htable id q f) = do
         let (rel,(_,pq)) = runState q (0,EmptyQuery)
         q' <-  generateQuery id pq
         ctx <- fmap getContext ask
@@ -158,22 +166,22 @@ instance (Renderable a) => Renderable (HTable a) where
             -- ListContext _ -> return $ text "$scope.source = function (index) {"
                                    -- $$ nest 4 (text "return" <+> q' <> semi)
                                    -- $$ text "}"
-    modules (HTable id q f) = id : (modules $ evalState (f (evalState q (0,EmptyQuery))) (id ++ "",0,Map.empty))
-    toElementList (HTable id q f) = toElementList $ evalState (f (evalState q (0,EmptyQuery))) (id ++ "",0,Map.empty)
--- instance (Modellable a) => Modellable (HTable a) where
-    -- model (HTable id q f) = 
+    modules (Htable id q f) = id : (modules $ evalState (f (evalState q (0,EmptyQuery))) (id ++ "",0,Map.empty))
+    toElementList (Htable id q f) = toElementList $ evalState (f (evalState q (0,EmptyQuery))) (id ++ "",0,Map.empty)
+-- instance (Modellable a) => Modellable (Htable a) where
+    -- model (Htable id q f) = 
         -- let (rel,(_,pq)) = runState q (0,EmptyQuery)
             -- elem = evalState (f rel) (0,Map.empty) in
         -- arrayfy $ model elem 
--- instance (Filterable a) => Filterable (HTable a) where
-    -- item (HTable id q f) = item $ evalState (f (evalState q (0,EmptyQuery))) (id ++ "",0,Map.empty)
-instance (Filterable a) => Filterable (HTable a) where
-    isNamed n (HTable id q f) = isNamed n $ evalState (f (evalState q (0,EmptyQuery))) (id ++ "",0,Map.empty)
-    parameters (HTable id q f) = parameters $ evalState (f (evalState q (0,EmptyQuery))) (id ++ "",0,Map.empty)
-    children (HTable id q f) = children $ evalState (f (evalState q (0,EmptyQuery))) (id ++ "",0,Map.empty)
-    contains i (HTable id q f) = contains i $ evalState (f (evalState q (0,EmptyQuery))) (id ++ "",0,Map.empty)
-instance (Presentable a) => Presentable (HTable a) where
-    present (HTable id q f) = do
+-- instance (Filterable a) => Filterable (Htable a) where
+    -- item (Htable id q f) = item $ evalState (f (evalState q (0,EmptyQuery))) (id ++ "",0,Map.empty)
+instance (Filterable a) => Filterable (Htable a) where
+    isNamed n (Htable id q f) = isNamed n $ evalState (f (evalState q (0,EmptyQuery))) (id ++ "",0,Map.empty)
+    parameters (Htable id q f) = parameters $ evalState (f (evalState q (0,EmptyQuery))) (id ++ "",0,Map.empty)
+    children (Htable id q f) = children $ evalState (f (evalState q (0,EmptyQuery))) (id ++ "",0,Map.empty)
+    contains i (Htable id q f) = contains i $ evalState (f (evalState q (0,EmptyQuery))) (id ++ "",0,Map.empty)
+instance (Presentable a) => Presentable (Htable a) where
+    present (Htable id q f) = do
         e' <- present (evalState (f (evalState q (0,EmptyQuery))) (id ++ "",0,Map.empty))
         return $ text "Goto" <> (parens . doubleQuotes) (text id)
               $$ text "Say" <> (parens . doubleQuotes) (text "this is " <> text id)

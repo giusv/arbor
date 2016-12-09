@@ -94,48 +94,17 @@ resultsbytarga = do
     llesioni <- label (string "lesioni")
     ldecessi <- label (string "decessi")
     lpersone <- label (string "persone")
-    slist <- htable allSinistri showSinistroTable
+    stable <- htable allSinistri showSinistroTable
     return $ t <\> l
-               <-> (lid  <|> ldata <|> lstato <|> lluogo <|> lautor <|> ldanni <|> llesioni <|> ldecessi <|> lpersone)
-               <-> slist
+               <-> stable
 
 
 resultsbynome = do
     n <- parameter "nome"
     l <- label (param n)
-    lid <- label (string "id")
-    ldata <- label (string "data")
-    lstato <- label (string "stato")
-    lluogo <- label (string "luogo")
-    lautor <- label (string "autor")
-    ldanni <- label (string "danni")
-    llesioni <- label (string "lesioni")
-    ldecessi <- label (string "decessi")
-    lpersone <- label (string "persone")
-    slist <- list allSinistri showSinistro
+    stable <- htable allSinistri showSinistroTable
     return $ n <\> l
-               <-> (lid  <|> ldata <|> lstato <|> lluogo <|> lautor <|> ldanni <|> llesioni <|> ldecessi <|> lpersone)
-               <-> slist
-
-
--- showRequest r = do
-    -- lid <- label (r ! "id")
-    -- lsid <- label (r ! "sid")
-    -- laid <- label (r ! "aid")
-    -- return $ lid <|> lsid <|> laid
-    
-    
-showSinistro r = do
-    lid <- label (r ! "idSinistro")
-    ldata <- label (r ! "data")
-    lstato <- label (r ! "stato")
-    lluogo <- label (r ! "luogo")
-    lautor <- label (r ! "autor")
-    ldanni <- label (r ! "danni")
-    llesioni <- label (r ! "lesioni")
-    ldecessi <- label (r ! "decessi")
-    plist <- list (personeBySinistro (value lid)) showPersona
-    return $ (lid  <|> ldata <|> lstato <|> lluogo <|> lautor <|> ldanni <|> llesioni <|> ldecessi <|> plist)
+               <-> stable
 
 showSinistroTable r = do
     lid <- label (r ! "idSinistro")
@@ -146,11 +115,18 @@ showSinistroTable r = do
     ldanni <- label (r ! "danni")
     llesioni <- label (r ! "lesioni")
     ldecessi <- label (r ! "decessi")
-    return $ (lid .*. ldata .*. lstato .*. lluogo .*. lautor .*. ldanni .*. llesioni .*. ldecessi .*. HNil)
+    ptable <- htable (personeBySinistro (value lid)) showPersonaTable
+    return $ lid .*. ldata .*. lstato .*. lluogo .*. lautor .*. ldanni .*. llesioni .*. ldecessi .*. ptable .*. HNil
 
 showPersona p = do
     lab <- label ((p ! "nome") .+. (p ! "cognome"))
     return $ lab
+    
+
+showPersonaTable p = do
+    lnome <- label (p ! "nome") 
+    lcognome <- label (p ! "cognome")
+    return $ lnome .*. lcognome .*. HNil
     
     
     
