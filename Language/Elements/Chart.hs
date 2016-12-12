@@ -48,9 +48,8 @@ instance (Renderable (Chart a b)) where
     directives (Chart id q f) = return []
         
     template (Chart id q f) = do
-        return $ text "+ '<div id=\"" <> text id <> text "\"style=\"height: 400px;\">'"
-              $$ nest 4 (text "+ '<svg></svg>'")
-              $$ text "+ '</div>'"
+        return $ text "+ '<canvas id=\"" <> text id <> text "\" width=\"400\" height=\"300\">'"
+              $$ text "+ '</canvas>'"
          
     controller (Chart id q f) = do
         let (rel,(_,pq)) = runState q (0,EmptyQuery)
@@ -59,18 +58,24 @@ instance (Renderable (Chart a b)) where
         y' <- generateCtrlExpr y
         q' <-  generateQuery id pq
         ctx <- fmap getContext ask
-        case ctx of 
-            EmptyContext -> return $ text "var" <+> q' <> semi
-                                  $$ text "$scope." <> text id
-                                 <+> equals 
-                                 <+> text "{"
-                                  $$ nest 4 (text "values: " <+> text id
-                                  <> text ".map(" <> (text "function (obj,ind) {"
-                                  $$ nest 4 (text "return {x: " <> x' <> text ", y: " <> y' <> text "};")
-                                  $$ text "})") <> comma
-                                  $$ text "key: " <> text (show id))
-                                  $$ text "}" <> semi
-            ListContext _ -> error "not supported"
+        return $ text "var ctx = document.getElementById(\"" <> text id <> text "\").getContext(\"2d\");"
+              $$ text "var myChart = new Chart(ctx, {"
+              $$ text "  type: \"polarArea\","
+              $$ text "  data: {"
+              $$ text "    labels: [\"v1\", \"v2\", \"v3\", \"v4\", \"v5\", \"v6\"],"
+              $$ text "    datasets: [{"
+              $$ text "      backgroundColor: ["
+              $$ text "        \"#2ecc71\","
+              $$ text "        \"#3498db\","
+              $$ text "        \"#95a5a6\","
+              $$ text "        \"#9b59b6\","
+              $$ text "        \"#f1c40f\","
+              $$ text "        \"#e74c3c\","
+              $$ text "      ],"
+              $$ text "      data: [12, 19, 3, 17, 28, 24]"
+              $$ text "    }]"
+              $$ text "  }"
+              $$ text "});"
     modules (Chart id q f) = []
     toElementList e = [Element e]
 -- instance (Modellable a) => Modellable (Chart a) where

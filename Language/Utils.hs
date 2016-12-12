@@ -63,13 +63,14 @@ generateIndex' name element = do
          $$ nest 4 (text "<script data-require=\"angular.js@1.3.0\" data-semver=\"1.3.0\" src=\"//code.angularjs.org/1.3.0/angular.js\"></script>"
          $$ text "<script src=\"lib/angular/angular-resource.js\"></script>"
          $$ text "<script src=\"js/app.js\"></script>"
+         $$ text "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.4.0/Chart.bundle.js\"></script>"
          -- $$ text "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.js\"></script>"
          $$ text "<script src=\"js/data.js\"></script>"
          $$ text "<script src=\"js/pose.js\"></script>"
          $$ text "<body id=\"body\">"
          
          $$ nest 4 (text "<div class=\"container-fluid\">"
-         $$ nest 4 (text (printf "<h1>%s</h1>" name)
+         $$ nest 4 (text (printf "<h1>%s</h1>" "Archivio Integrato Antifrode")
          $$ text "<dir-interface></dir-interface>")
          $$ text "</div>")
          $$ text "</body>")

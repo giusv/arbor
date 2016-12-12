@@ -2,9 +2,9 @@
 module Language.Aia where
 import Language
 
-initInterface = Pose $ seg "home" [] </> seg "dettagli" ["sinistro" <=> string "1"]
+-- initInterface = Pose $ seg "home" [] </> seg "dettagli" ["sinistro" <=> string "1"]
 -- initInterface = Pose $ seg "home" [] </> seg "resultsbytarga" ["targa" <=> string "a"]
--- initInterface = Pose $ seg "login" []
+initInterface = Pose $ seg "login" []
         
 --------------------- Elements ---------------------
 interface = do
@@ -19,10 +19,11 @@ login = do
     u <- input  "Userid:"   (string "")
     p <- input  "Password:" (string "")
     b <- button (string "Accedi")
+    pl <- label $ string "Login"
+    bl <- blank
+    hl <- hpanel "primary" "fa fa-user fa-5x" pl (u <-> p <-> b ) bl
     transition b click EmptyAction (seg "home" [] </> seg "welcome" ["userid" <=> value u])
-    return $ u 
-         <-> p 
-         <-> b 
+    return $ bl <|> hl <|> bl
 
 nav = do
     hb <- link "Home"    (seg "home" [] </> seg "welcome" ["userid" <=> string "unknown"])
@@ -68,8 +69,9 @@ showUtente q = do
     luserid <- doubleLabel "Userid" q "userid"
     lnome <- doubleLabel "Nome" q "nome"
     lcognome <- doubleLabel "Cognome" q "cognome" 
+    lult <- doubleLabel "Ultimo accesso" q "ultacc" 
     lprof <- doubleLabel "Profilo" q "prof" 
-    return $ luserid <-> lnome <-> lcognome <-> lprof
+    return $ luserid <-> lnome <-> lcognome <-> lult <-> lprof
     
 searchbytarga = do
     t <- input  "Targa:"       (string "")
@@ -77,10 +79,11 @@ searchbytarga = do
     l <- input  "Data fine:"   (string "")
     b <- button (string "Invio")
     transition b click EmptyAction (seg "home" [] </> seg "resultsbytarga" ["targa" <=> value t])
-    return $ t 
+    bl <- blank
+    return $ (t 
          <-> d 
          <-> l
-         <-> b 
+         <-> b) <|> bl 
   
 searchbynome = do
     n <- input  "Codice sinistro:"  (string "")
@@ -89,18 +92,27 @@ searchbynome = do
     c <- input "Codice fiscale:"    (string "")
     b <- button (string "Invio")
     transition b click EmptyAction (seg "home" [] </> seg "resultsbynome" ["nome" <=> value c])
-    return $ n 
+    bl <- blank
+    return $ (n 
          <-> d 
          <-> l 
          <-> c
-         <-> b 
+         <-> b) <|> bl 
 
 resultsbytarga = do
     t <- parameter "targa"
     ptable <- htable (parametriByTarga (param t)) showParametriTable
+    ph <- label $ string "Parametri di significativita"
+    bl <- blank
+    hp <- hpanel "primary" "fa fa-pie-chart fa-5x" ph ptable bl
+    let plotVs v = (v ! "x",v ! "y") 
+    c <- chart allVs plotVs
+    ps <- label $ string "Dati del sinistro"
     stable <- htable (sinistriByTarga (param t)) showSinistroTable
-    return $ t <\> ptable
-               <-> stable
+    hs <- hpanel "danger" "fa fa-car fa-5x" ps stable bl
+    return $ t <\> hp
+               <-> c
+               <-> hs
 
 
 resultsbynome = do
@@ -110,12 +122,12 @@ resultsbynome = do
 
 showParametriTable v = do
     lric <- label (v ! "Ricorrenze")
-    lv1 <- label (v ! "v1")
-    lv2 <- label (v ! "v2")
-    lv3 <- label (v ! "v3")
-    lv4 <- label (v ! "v4")
-    lv5 <- label (v ! "v5")
-    lv6 <- label (v ! "v6")
+    lv1 <- label (v ! "V1")
+    lv2 <- label (v ! "V2")
+    lv3 <- label (v ! "V3")
+    lv4 <- label (v ! "V4")
+    lv5 <- label (v ! "V5")
+    lv6 <- label (v ! "V6")
     return $ lric .*. lv1 .*. lv2 .*. lv3 .*. lv4 .*. lv5 .*. lv6 .*. HNil
     
 showSinistroTable r = do
@@ -135,21 +147,6 @@ showSinistroTable r = do
     transition dett click EmptyAction (seg "home" [] </> seg "dettagli" ["sinistro" <=> value lid])
     return $ lid .*. ldataacc .*. ldataden .*. ldatadef .*. lstato .*. lluogo .*. lautor .*. ldanni .*. llesioni .*. ldecessi .*. ptable .*. vtable .*. dett .*. HNil
 
-
--- class HList l => HBuild a l where
-    -- hBuild :: [a] -> l
--- instance HBuild a HNil where
-    -- hBuild _ = HNil
--- instance HBuild a l => HBuild a (HCons a l) where
-    -- hBuild (x:xs) = HCons x (hBuild xs)
--- testtt = (hBuild ["1","2"]) -- :: (String :*: String :*: HNil)    
--- labels :: HList l => Rel -> [String] -> l
--- labels r ls = do 
-    -- ls' <- sequence $ map (\l -> label (r ! l)) ls
-    -- return $ hBuild ls'
--- hBuild :: HList l => [a] -> l
--- hBuild [] = HNil
--- hBuild (x:xs) = HCons x (hBuild xs)
 dettagliPersone = do
     s <- parameter "sinistro"
     h <- label (string "Persone coinvolte nel sinistro")
@@ -177,32 +174,31 @@ dettagliVeicoli = do
 dettagli = do
     s <- parameter "sinistro"
     l <- list (sinistroById $ param s) showDettagli
-    -- let plotVs v = (v ! "x",v ! "y") 
-    -- c <- chart allVs plotVs
+    let plotVs v = (v ! "x",v ! "y") 
+    c <- chart allVs plotVs
     p <- dettagliPersone
     v <- dettagliVeicoli
     a <- alternative [ p <@> "persone"
                      , v <@> "veicoli"
                      ]
-    return $ s <\> l
-               -- <-> c
+    return $ s <\> l <|> c
                <-> a
                
 showPersonaTable p = do
-    lnome <- label (p ! "nome") 
-    lcognome <- label (p ! "cognome")
+    lnome <- label (p ! "Nome") 
+    lcognome <- label (p ! "Cognome")
     return $ lnome .*. lcognome .*. HNil
     
 showVeicoloTable v = do
-    ltarga <- label (v ! "targa") 
-    ltelaio <- label (v ! "telaio")
+    ltarga <- label (v ! "Targa") 
+    ltelaio <- label (v ! "Telaio")
     return $ ltarga .*. ltelaio .*. HNil
             
 showDettagliVeicoloTable v = do
-    lruolo <- label (v ! "ruolo") 
-    ltarga <- label (v ! "targa") 
-    ltelaio <- label (v ! "telaio")
-    lcond <- label ((v ! "nome") .+. string " " .+. (v ! "cognome"))
+    lruolo <- label (v ! "Ruolo") 
+    ltarga <- label (v ! "Targa") 
+    ltelaio <- label (v ! "Telaio")
+    lcond <- label ((v ! "Nome") .+. string " " .+. (v ! "Cognome"))
     return $ lruolo .*. ltarga .*. ltelaio .*. lcond .*. HNil
 
 showDettagli s = do
@@ -281,12 +277,12 @@ parametriByTarga t = do
     v <- table veicoli
     restrict (v ! "targa" *==* t)
     project [ v ! "ricorr" *@* "Ricorrenze"
-            , v ! "v1" *@* "v1"
-            , v ! "v2" *@* "v2"
-            , v ! "v3" *@* "v3"
-            , v ! "v4" *@* "v4"
-            , v ! "v5" *@* "v5"
-            , v ! "v6" *@* "v6"
+            , v ! "v1" *@* "V1"
+            , v ! "v2" *@* "V2"
+            , v ! "v3" *@* "V3"
+            , v ! "v4" *@* "V4"
+            , v ! "v5" *@* "V5"
+            , v ! "v6" *@* "V6"
             ]
 attrSinistro s = [ s ! "idSinistro"     *@* "Codice"
                  , s ! "dataacc"        *@* "Accadimento"
@@ -316,16 +312,16 @@ personeBySinistro s = do
     r <- table ruolipers
     p <- table persone
     restrict ((r ! "idsin" *==* s) *&&* (p ! "idPersona" *==* r ! "idpers"))
-    project [ p ! "nome" *@* "nome"
-            , p ! "cognome" *@* "cognome"
+    project [ p ! "nome" *@* "Nome"
+            , p ! "cognome" *@* "Cognome"
             ]
 
 veicoliBySinistro s = do
     r <- table ruoliveic
     v <- table veicoli
     restrict ((r ! "idsin" *==* s) *&&* (v ! "targa" *==* r ! "idveic"))
-    project [ v ! "targa" *@* "targa"
-            , v ! "telaio" *@* "telaio"
+    project [ v ! "targa" *@* "Targa"
+            , v ! "telaio" *@* "Telaio"
             ]
 
 dettagliVeicoliBySinistro s = do
@@ -333,11 +329,11 @@ dettagliVeicoliBySinistro s = do
     v <- table veicoli
     p <- table persone
     restrict ((r ! "idsin" *==* s) *&&* ((v ! "targa" *==* r ! "idveic") *&&* (p ! "idPersona" *==* r ! "idcond")))
-    project [ r ! "ruolo" *@* "ruolo"
-            , v ! "targa" *@* "targa"
-            , v ! "telaio" *@* "telaio"
-            , p ! "nome" *@* "nome"
-            , p ! "cognome" *@* "cognome"
+    project [ r ! "ruolo" *@* "Ruolo"
+            , v ! "targa" *@* "Targa"
+            , v ! "telaio" *@* "Telaio"
+            , p ! "nome" *@* "Nome"
+            , p ! "cognome" *@* "Cognome"
             ]
 
 utenteById id = do
@@ -400,3 +396,23 @@ initUtenti = do
     into utenti
     insert $ "userid" *=* string "agenzia01" : "nome" *=* string "Giuseppe" : "cognome" *=* string "Verdi" : "prof" *=* string "compagnia" : []
     insert $ "userid" *=* string "agenzia02" : "nome" *=* string "Marco" : "cognome" *=* string "Neri" : "prof" *=* string "ministero" : []
+    
+    
+    
+    
+
+
+-- class HList l => HBuild a l where
+    -- hBuild :: [a] -> l
+-- instance HBuild a HNil where
+    -- hBuild _ = HNil
+-- instance HBuild a l => HBuild a (HCons a l) where
+    -- hBuild (x:xs) = HCons x (hBuild xs)
+-- testtt = (hBuild ["1","2"]) -- :: (String :*: String :*: HNil)    
+-- labels :: HList l => Rel -> [String] -> l
+-- labels r ls = do 
+    -- ls' <- sequence $ map (\l -> label (r ! l)) ls
+    -- return $ hBuild ls'
+-- hBuild :: HList l => [a] -> l
+-- hBuild [] = HNil
+-- hBuild (x:xs) = HCons x (hBuild xs)
