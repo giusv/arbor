@@ -162,6 +162,7 @@ a *@@* b = (b,a)
 infix 5 *@*
 (*@*) ::  Expression String -> Attribute -> (Attribute,Attribute)
 (Expression (AttrExpr a)) *@* b = (b,a)
+-- (Expression a) *@* b = (b,a)
 
 data PrimCommand = EmptyCommand 
                  | Into Table

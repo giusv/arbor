@@ -22,6 +22,7 @@ module Language (
     , module Language.Elements.Checkbox
     , module Language.Elements.Label
     , module Language.Elements.Panel
+    , module Language.Elements.Hpanel
     , module Language.Elements.Aggregate
     , module Language.Elements.List
     , module Language.Elements.Htable
@@ -54,6 +55,7 @@ import Language.Elements.Input
 import Language.Elements.Checkbox
 import Language.Elements.Label
 import Language.Elements.Panel
+import Language.Elements.Hpanel
 import Language.Elements.Aggregate
 import Language.Elements.List
 import Language.Elements.Htable

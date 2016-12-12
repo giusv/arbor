@@ -116,7 +116,7 @@ instance (Renderable a) => Renderable (Htable a) where
         ctrl <- local update (controller helems)
         ctx <- fmap getContext ask
         classes <- traceShow rel $ fmap getClasses ask
-        let headers = let (Rel r) = rel in vcat $ map (\(h,_) -> text "+ '<div class=\"table-cell\">'"
+        let headers = let (Rel r) = rel in vcat $ map (\(h,_) -> text "+ '<div class=\"table-cell table-head\">'"
                                                $$ nest 4 (text ("+ '" ++  h ++ "'"))
                                                $$ text "+ '</div>'") r
         let dir = text (printf "angular.module('%s', ['pose','data'])" id) -- traceShow ("in directive Htable: " ++ show (model helems)) $ 

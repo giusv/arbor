@@ -27,7 +27,7 @@ main =
         ahkFile = "presentation.ahk"
         indexFile = appName ++ ".html"
         -- init = Pose $ (seg "login" [])
-        init = Pose $ seg "home" [] </> seg "resultsbytarga" ["targa" <=> string "a"]
+        -- init = Pose $ seg "home" [] </> seg "resultsbytarga" ["targa" <=> string "a"]
         -- init = Pose $ seg "home" [] </> seg "welcome" []
         -- init = Pose $ (seg "login" [])
         -- init = Pose $ (seg "home" [] </> (seg "navbarstd" [] <&> seg "welcome" []))
@@ -68,10 +68,10 @@ main =
            ; let
                  -- app = runInterpList (directives element) (Map.empty,[])
                  ind = generateIndex appName element transitions
-                 app = generateApplication appName element transitions init
+                 app = generateApplication appName element transitions initInterface
                  pos = generatePoseService appName element
                  dat = generateDataService model
-                 ahk = generateAhk appName element transitions init
+                 ahk = generateAhk appName element transitions initInterface
              in
                 case sequence [ind,app,dat,pos,ahk] of 
                     Left errors -> putStrLn ("error:" ++ errors)
