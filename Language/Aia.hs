@@ -3,12 +3,15 @@ module Language.Aia where
 import Language
 
 -- initInterface = Pose $ seg "home" [] </> seg "dettagli" ["sinistro" <=> string "1"]
+initInterface = Pose $ seg "home" [] </> seg "welcome" ["userid" <=> string "agenzia01"]
 -- initInterface = Pose $ seg "home" [] </> seg "resultsbytarga" ["targa" <=> string "a"]
-initInterface = Pose $ seg "login" []
+-- initInterface = Pose $ seg "login" []
 ee = EmptyElement
 center e = ee <|> e <|> ee        
 riv = "Ricerca per Identificativi Veicolo"
 rin = "Ricerca per Nominativo"
+ric = "Ricerca per Codice Unico Evento"
+riq = "Ricerca Data Quality Report"
 --------------------- Elements ---------------------
 interface = do
     log <- login
@@ -29,10 +32,13 @@ login = do
 
 nav = do
     hb <- link "Home"    (seg "home" [] </> seg "welcome" ["userid" <=> string "unknown"])
-    tb <- link rin (seg "home" [] </> seg "searchbynome"  [])
     sb <- link riv (seg "home" [] </> seg "searchbytarga"  [])
-    nb <- navbar [hb,tb,sb]
-    return nb
+    tb <- link rin (seg "home" [] </> seg "searchbynome"  [])
+    cb <- link ric (seg "home" [] </> seg "searchbycue"  [])
+    nb <- link "Network Analysis" (seg "home" [] </> seg "netanalysis"  [])
+    db <- link "Data Quality Report" (seg "home" [] </> seg "searchdataqual"  [])
+    n <- navbar [hb,sb,tb,cb,nb,db]
+    return n
     
 home = do
     n <- nav
@@ -44,6 +50,9 @@ home = do
     rn <- resultsbynome
     sc <- searchbycue
     rc <- resultsbycue
+    sq <- searchdataqual
+    rq <- resultsdataqual
+    na <- netanalysis
     a <- alternative [ w <@> "welcome"
                      , d <@> "dettagli"
                      , st <@> "searchbytarga"
@@ -52,6 +61,9 @@ home = do
                      , rn <@> "resultsbynome"
                      , sc <@> "searchbycue"
                      , rc <@> "resultsbycue"
+                     , sq <@> "searchdataqual"
+                     , rq <@> "resultsdataqual"
+                     , na <@> "netanalysis"
                      ]
     return $ n 
          <-> a
@@ -64,20 +76,39 @@ welcome = do
     ub <- list (utenteById $ param id) showUtente
     utente <- hpanel "primary" "fa fa-user-o fa-5x" uh ub ee
 
+    lbt <- label (string "News")
+    nb <- list allNews showNews 
+    news <- hpanel "primary" "fa fa-newspaper-o fa-5x" lbt nb ee
+
     sbt <- link "Vai alla pagina" (seg "home" [] </> seg "searchbytarga"  [])
     lbt <- label (string riv)
-    searchbytarga <- hpanel "primary" "fa fa-car fa-5x" lbt sbt ee
+    searchbytarga <- hpanel "success" "fa fa-car fa-5x" lbt sbt ee
 
     sbn <- link "Vai alla pagina" (seg "home" [] </> seg "searchbynome"  [])
     lbn <- label (string rin)
-    searchbynome <- hpanel "danger" "fa fa-users fa-5x" lbn sbn ee
+    searchbynome <- hpanel "info" "fa fa-users fa-5x" lbn sbn ee
 
     sbc <- link "Vai alla pagina" (seg "home" [] </> seg "searchbycue"  [])
-    lbc <- label (string "Ricerca per Codice Unico Evento")
-    searchbynome <- hpanel "danger" "fa fa-users fa-5x" lbc sbc ee
+    lbc <- label (string ric)
+    searchbycue <- hpanel "warning" "fa fa-tag fa-5x" lbc sbc ee
 
-    return $ id <\> utente 
-                <-> searchbytarga <|> searchbynome
+    sbw <- link "Vai alla pagina" (seg "home" [] </> seg "netanalysis"  [])
+    lbw <- label (string "Network Analysis")
+    netanalysis <- hpanel "danger" "fa fa-yelp fa-5x" lbw sbw ee
+
+    dql <- link "Vai alla pagina" (seg "home" [] </> seg "searchdataqual"  [])
+    dqt <- label (string "Data Quality Report")
+    dataqual <- hpanel "primary" "fa fa-thumbs-o-up fa-5x" dqt dql ee
+
+    other <- hpanel "default" "fa fa-question fa-5x" ee ee ee
+
+    return $ id <\> utente <|> news
+                <-> searchbytarga <|> searchbynome <|> searchbycue   
+                <-> dataqual <|> netanalysis <|> other
+showNews n = do
+    l <- label ((n ! "data") .+. string " - " .+. (n ! "text")) 
+    -- ltext <- label (n ! "text")
+    return l
 showUtente q = do
     luserid <- doubleLabel "Userid" q "userid"
     lnome <- doubleLabel "Nome" q "nome"
@@ -86,6 +117,29 @@ showUtente q = do
     lprof <- doubleLabel "Profilo" q "prof" 
     return $ luserid <-> lnome <-> lcognome <-> lult <-> lprof
     
+searchdataqual = do
+    h <- label $ string riq
+    d <- input  "Data inizio:" (string "")
+    l <- input  "Data fine:"   (string "")
+    b <- button (string "Invio")
+    transition b click EmptyAction (seg "home" [] </> seg "resultsdataqual" [])
+    sbcp <- hpanel "primary" "fa fa-thumbs-o-up fa-5x" h (d <-> l <-> b) ee
+    return $ sbcp
+
+resultsdataqual = do
+    h <- label $ string "Risultati Data Quality Report"
+    t <- htable allReports showReportTable
+    p <- hpanel "default" "fa fa-thumbs-o-up fa-5x" h t ee
+    return $ p
+
+showReportTable v = do
+    ldata <- label (v ! "data") 
+    ldesc <- label (v ! "descrizione") 
+    lurl <- pdf (v ! "url") 
+    return $ ldesc .*. ldata .*. lurl .*. HNil
+    
+netanalysis = return ee
+
 searchbytarga = do
     h <- label $ string riv
     t <- input  "Targa:"       (string "")
@@ -104,6 +158,34 @@ searchbycue = do
     sbcp <- hpanel "primary" "fa fa-car fa-5x" h (c <-> b) ee
     return $ sbcp 
   
+resultsbycue = do
+    h <- label $ string ("Risultati " ++ ric)
+    t <- parameter "cue"
+    ps <- label $ string "Score sintetici"
+    stable <- htable (scoresByCue (param t)) showScoreTable
+    hs <- hpanel "danger" "fa fa-car fa-5x" ps stable ee
+    
+    ps' <- label $ string "Dati del sinistro"
+    stable' <- htable (sinistriByCue (param t)) showSinistroTable
+    hs' <- hpanel "danger" "fa fa-car fa-5x" ps' stable' ee
+    
+    p <- hpanel "default" "fa fa-car fa-5x" h (hs <-> hs') ee
+    
+    return $ t <\> p
+    
+showScoreTable r = do
+    lcue <- label (r ! "cue")
+    lm_sco1 <- label (r ! "m_sco1")
+    lm_sco2 <- label (r ! "m_sco2")
+    lm_sco3 <- label (r ! "m_sco3")
+    lm_vei1 <- label (r ! "m_vei1")
+    lm_vei2 <- label (r ! "m_vei2")
+    lm_vei3 <- label (r ! "m_vei3")
+    lm_score <- label (r ! "m_score")
+    lm_qscore <- label (r ! "m_qscore")
+    lultimo_agg <- label (r ! "ultimo_agg")
+    return $ lcue .*. lm_sco1 .*. lm_sco2 .*. lm_sco3 .*. lm_vei1 .*. lm_vei2 .*. lm_vei3 .*. lm_score .*. lm_qscore .*. lultimo_agg .*. HNil
+    
 searchbynome = do
     h <- label $ string rin
     n <- input "Codice sinistro:"   (string "")
@@ -128,10 +210,7 @@ resultsbytarga = do
     hs <- hpanel "danger" "fa fa-car fa-5x" ps stable ee
     p <- hpanel "default" "fa fa-car fa-5x" h (hp <-> center c <-> hs) ee
     return $ t <\> p
-    
-resultsbycue = do
-    c <- parameter "cue"
-    return $ c <\> ee
+
 
 resultsbynome = do
     h <- label $ string "Risultati Ricerca per Nominativo"
@@ -272,6 +351,10 @@ ruolipers = Table "ruolipers" ["idpers","idsin","ruolo"]
 sinistri = Table "sinistri" ["idSinistro","dataacc","dataden","datadef","stato","luogo","autor","danni","lesioni","decessi"]
 veicoli = Table "veicoli" ["targa","telaio","dataimm","idprop","idcontr","ricorr","v1","v2","v3","v4","v5","v6"]
 utenti = Table "utenti" ["userid","nome","cognome","ultacc","prof"]
+news = Table "news" ["data","text"]
+reports = Table "reports" ["id","descrizione","data","url"]
+scoresint = Table "scoresint" ["cue","m_sco1","m_sco2","m_sco3","m_sco4","m_sco5","m_sco6","m_sco7","m_sco8","m_sco9","m_sco10","m_con1","m_vei1","m_vei2","m_vei3","m_vei4","m_vei5","m_vei6","m_vei7","m_vei8","m_vei9","m_vei10","m_score","m_qscore","m_score_veic","m_score_int","m_score_coinv","m_score_contr","ultimo_agg"]
+cues = Table "cues" ["cue","idSinistro"]
 
 ------ Query -----------
 sinistroById i = do
@@ -322,8 +405,21 @@ sinistriByNome n = do
     s <- table sinistri
     r <- table ruolipers
     p <- table persone
-    restrict ((p ! "cognome" *==* n) *&&* ((r ! "idpers" *==* p ! "idPersona") *&&* (s ! "idSinistro" *==* r ! "idsin")))
+    restrict ((p ! "codfisc" *==* n) *&&* ((r ! "idpers" *==* p ! "idPersona") *&&* (s ! "idSinistro" *==* r ! "idsin")))
     project $ attrSinistro s
+    
+    -- "m_sco1","m_sco2","m_sco3","m_vei1","m_vei2","m_vei3","m_score","m_qscore","ultimo_agg"
+sinistriByCue n = do
+    s <- table sinistri
+    r <- table cues
+    restrict ((r ! "cue" *==* n) *&&* (r ! "idSinistro" *==* s ! "idSinistro"))
+    project $ attrSinistro s
+
+scoresByCue n = do
+    s <- table scoresint
+    restrict (s ! "cue" *==* n)
+    projectAttr s ["cue","m_sco1","m_sco2","m_sco3","m_vei1","m_vei2","m_vei3","m_score","m_qscore","ultimo_agg"]
+    
 personeBySinistro s = do
     r <- table ruolipers
     p <- table persone
@@ -361,6 +457,13 @@ allVs = do
     v <- table vdata
     projectAttr v ["x","y"]
     
+allNews = do
+    v <- table news
+    projectAttr v ["data","text"]
+    
+allReports = do
+    v <- table reports
+    projectAttr v ["descrizione","data","url"]
     
 ---- initialization ----
 vdata = Table "vdata" ["x","y"]
@@ -373,7 +476,7 @@ initVdata = do
     insert $ "x" *=* (string "v5") : "y" *=* (string "4") : []
     insert $ "x" *=* (string "v6") : "y" *=* (string "5") : []
 
-model = [initVdata,initSinistri,initRuolipers,initPersone,initVeicoli,initRuoliveic,initUtenti]
+model = [initVdata,initSinistri,initRuolipers,initPersone,initVeicoli,initRuoliveic,initUtenti,initNews,initReports,initCues,initScoresint]
 initSinistri = do
     into sinistri
     insert $ "idSinistro" *=* string "0" : "dataacc" *=* string "01/12/2015" : "dataden" *=* string "01/12/2015" : "datadef" *=* string "01/12/2015" : "stato" *=* string "liquidato" : "luogo" *=* string "Roma" : "autor" *=* string "si" : "danni" *=* string "no" : "lesioni" *=* string "no" : "decessi" *=* string "no" : []    
@@ -421,9 +524,28 @@ initUtenti = do
     insert $ "userid" *=* string "agenzia01" : "nome" *=* string "Giuseppe" : "cognome" *=* string "Verdi" : "prof" *=* string "compagnia" : []
     insert $ "userid" *=* string "agenzia02" : "nome" *=* string "Marco" : "cognome" *=* string "Neri" : "prof" *=* string "ministero" : []
     
+initNews = do
+    into news
+    insert $ "data" *=* string "dicembre 2016" : "text" *=* string "Disponibile il nuovo data quality report" : []
+    insert $ "data" *=* string "novembre 2016" : "text" *=* string "Emesso il nuovo manuale di gestione dei profili applicativi" : []
+    insert $ "data" *=* string "ottobre 2016"  : "text" *=* string "Nuovo provvedimento 48/2016" : []
+ 
+initReports = do
+    into reports
+    insert $ "descrizione" *=* string "Rapporto qualita dicembre 2016" : "data" *=* string "01/12/2016" : "url" *=* string "D:/Dati/Profili/M026980/Documents/programmi/arbor/report.pdf" : []
+    insert $ "descrizione" *=* string "Rapporto qualita novembre 2016" : "data" *=* string "01/11/2016" : "url" *=* string "D:/Dati/Profili/M026980/Documents/programmi/arbor/report.pdf" : []  
+    insert $ "descrizione" *=* string "Rapporto qualita ottobre 2016"  : "data" *=* string "01/10/2016" : "url" *=* string "D:/Dati/Profili/M026980/Documents/programmi/arbor/report.pdf" : []  
     
-    
-    
+
+initScoresint = do
+    into scoresint
+    insert $ "cue" *=* string "cue1" : "m_sco1" *=* string "1" : "m_sco2" *=* string "1" : "m_sco3" *=* string "0" : "m_sco4" *=* string "0" : "m_sco5" *=* string "0" : "m_sco6" *=* string "0" : "m_sco7" *=* string "" : "m_sco8" *=* string "0" : "m_sco9" *=* string "0" : "m_sco10" *=* string "0" : "m_con1" *=* string "0" : "m_vei1" *=* string "0" : "m_vei2" *=* string "0" : "m_vei3" *=* string "0" : "m_vei4" *=* string "0" : "m_vei5" *=* string "0" : "m_vei6" *=* string "" : "m_vei7" *=* string "" : "m_vei8" *=* string "" : "m_vei9" *=* string "0" : "m_vei10" *=* string "0" : "m_score" *=* string "30" : "m_qscore" *=* string "80" : "m_score_veic" *=* string "0" : "m_score_int" *=* string "0" : "m_score_coinv" *=* string "30" : "m_score_contr" *=* string "0" : "ultimo_agg" *=* string "25/11/2016 23:20" : []
+    insert $ "cue" *=* string "cue2" : "m_sco1" *=* string "1" : "m_sco2" *=* string "0" : "m_sco3" *=* string "0" : "m_sco4" *=* string "0" : "m_sco5" *=* string "1" : "m_sco6" *=* string "0" : "m_sco7" *=* string "" : "m_sco8" *=* string "0" : "m_sco9" *=* string "0" : "m_sco10" *=* string "0" : "m_con1" *=* string "0" : "m_vei1" *=* string "0" : "m_vei2" *=* string "0" : "m_vei3" *=* string "0" : "m_vei4" *=* string "0" : "m_vei5" *=* string "0" : "m_vei6" *=* string "" : "m_vei7" *=* string "" : "m_vei8" *=* string "" : "m_vei9" *=* string "0" : "m_vei10" *=* string "0" : "m_score" *=* string "30" : "m_qscore" *=* string "80" : "m_score_veic" *=* string "0" : "m_score_int" *=* string "0" : "m_score_coinv" *=* string "30" : "m_score_contr" *=* string "0" : "ultimo_agg" *=* string "20/11/2016 09:05" : []
+
+initCues = do
+    into cues 
+    insert $ "cue" *=* string "cue1" : "idSinistro" *=* string "0" : []
+    insert $ "cue" *=* string "cue1" : "idSinistro" *=* string "1" : []
 
 
 -- class HList l => HBuild a l where
@@ -432,7 +554,7 @@ initUtenti = do
     -- hBuild _ = HNil
 -- instance HBuild a l => HBuild a (HCons a l) where
     -- hBuild (x:xs) = HCons x (hBuild xs)
--- testtt = (hBuild ["1","2"]) -- :: (String :*: String :*: HNil)    
+-- testtt = (hBuild ["1" *=* string "2"]) -- :: (String :*: String :*: HNil)    
 -- labels :: HList l => Rel -> [String] -> l
 -- labels r ls = do 
     -- ls' <- sequence $ map (\l -> label (r ! l)) ls

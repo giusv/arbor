@@ -16,6 +16,7 @@ module Language (
     , module Language.Description
     , module Language.Elements.EmptyElement
     , module Language.Elements.Button
+    , module Language.Elements.Pdf
     , module Language.Elements.Link
     , module Language.Elements.Navbar
     , module Language.Elements.Input
@@ -50,6 +51,7 @@ import Language.Description
 import Language.Elements.EmptyElement
 import Language.Elements.Button
 import Language.Elements.Link
+import Language.Elements.Pdf
 import Language.Elements.Navbar
 import Language.Elements.Input
 import Language.Elements.Checkbox
