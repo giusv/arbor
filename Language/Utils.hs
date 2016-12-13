@@ -70,6 +70,8 @@ generateIndex' name element = do
          $$ text "<body id=\"body\">"
          
          $$ nest 4 (text "<div class=\"container-fluid\">"
+         -- $$ text "<button class=\"btn btn-info\" type=\"button\" ng-click=\"backButtonClick()\"> <span class=\"glyphicon glyphicon-arrow-left\"></span> </button>"
+         -- $$ text "<button class=\"btn btn-info\" type=\"button\" ng-click=\"fwdButtonClick()\"> <span class=\"glyphicon glyphicon-arrow-right\"></span> </button>"
          $$ nest 4 (text (printf "<h1>%s</h1>" "Archivio Integrato Antifrode")
          $$ text "<dir-interface></dir-interface>")
          $$ text "</div>")

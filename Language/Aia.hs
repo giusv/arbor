@@ -5,7 +5,10 @@ import Language
 -- initInterface = Pose $ seg "home" [] </> seg "dettagli" ["sinistro" <=> string "1"]
 -- initInterface = Pose $ seg "home" [] </> seg "resultsbytarga" ["targa" <=> string "a"]
 initInterface = Pose $ seg "login" []
-        
+ee = EmptyElement
+center e = ee <|> e <|> ee        
+riv = "Ricerca per Identificativi Veicolo"
+rin = "Ricerca per Nominativo"
 --------------------- Elements ---------------------
 interface = do
     log <- login
@@ -20,15 +23,14 @@ login = do
     p <- input  "Password:" (string "")
     b <- button (string "Accedi")
     pl <- label $ string "Login"
-    bl <- blank
-    hl <- hpanel "primary" "fa fa-user fa-5x" pl (u <-> p <-> b ) bl
+    hl <- hpanel "primary" "fa fa-user fa-5x" pl (u <-> p <-> b ) ee
     transition b click EmptyAction (seg "home" [] </> seg "welcome" ["userid" <=> value u])
-    return $ bl <|> hl <|> bl
+    return $ center hl
 
 nav = do
     hb <- link "Home"    (seg "home" [] </> seg "welcome" ["userid" <=> string "unknown"])
-    tb <- link "Ricerca Soggetti coinvolti" (seg "home" [] </> seg "searchbynome"  [])
-    sb <- link "Ricerca Identificativi veicolo" (seg "home" [] </> seg "searchbytarga"  [])
+    tb <- link rin (seg "home" [] </> seg "searchbynome"  [])
+    sb <- link riv (seg "home" [] </> seg "searchbytarga"  [])
     nb <- navbar [hb,tb,sb]
     return nb
     
@@ -40,12 +42,16 @@ home = do
     rt <- resultsbytarga
     sn <- searchbynome
     rn <- resultsbynome
+    sc <- searchbycue
+    rc <- resultsbycue
     a <- alternative [ w <@> "welcome"
                      , d <@> "dettagli"
                      , st <@> "searchbytarga"
                      , rt <@> "resultsbytarga"
                      , sn <@> "searchbynome"
                      , rn <@> "resultsbynome"
+                     , sc <@> "searchbycue"
+                     , rc <@> "resultsbycue"
                      ]
     return $ n 
          <-> a
@@ -53,16 +59,23 @@ home = do
 
 welcome = do
     id <- parameter "userid"
-    sbn <- link "Vai alla pagina" (seg "home" [] </> seg "searchbynome"  [])
-    lbn <- label (string "Ricerca per nominativo")
-    sbt <- link "Vai alla pagina" (seg "home" [] </> seg "searchbytarga"  [])
-    lbt <- label (string "Ricerca identificativi veicolo")
+
     uh <- label (string "Utente")
-    bl <- blank
     ub <- list (utenteById $ param id) showUtente
-    utente <- hpanel "primary" "fa fa-user-o fa-5x" uh ub bl
-    searchbytarga <- hpanel "primary" "fa fa-car fa-5x" lbt sbt bl
-    searchbynome <- hpanel "danger" "fa fa-users fa-5x" lbn sbn bl
+    utente <- hpanel "primary" "fa fa-user-o fa-5x" uh ub ee
+
+    sbt <- link "Vai alla pagina" (seg "home" [] </> seg "searchbytarga"  [])
+    lbt <- label (string riv)
+    searchbytarga <- hpanel "primary" "fa fa-car fa-5x" lbt sbt ee
+
+    sbn <- link "Vai alla pagina" (seg "home" [] </> seg "searchbynome"  [])
+    lbn <- label (string rin)
+    searchbynome <- hpanel "danger" "fa fa-users fa-5x" lbn sbn ee
+
+    sbc <- link "Vai alla pagina" (seg "home" [] </> seg "searchbycue"  [])
+    lbc <- label (string "Ricerca per Codice Unico Evento")
+    searchbynome <- hpanel "danger" "fa fa-users fa-5x" lbc sbc ee
+
     return $ id <\> utente 
                 <-> searchbytarga <|> searchbynome
 showUtente q = do
@@ -74,51 +87,58 @@ showUtente q = do
     return $ luserid <-> lnome <-> lcognome <-> lult <-> lprof
     
 searchbytarga = do
+    h <- label $ string riv
     t <- input  "Targa:"       (string "")
     d <- input  "Data inizio:" (string "")
     l <- input  "Data fine:"   (string "")
     b <- button (string "Invio")
     transition b click EmptyAction (seg "home" [] </> seg "resultsbytarga" ["targa" <=> value t])
-    bl <- blank
-    return $ (t 
-         <-> d 
-         <-> l
-         <-> b) <|> bl 
+    sbtp <- hpanel "primary" "fa fa-car fa-5x" h (t <-> d <-> l <-> b) ee
+    return $ sbtp 
+  
+searchbycue = do
+    h <- label $ string riv
+    c <- input  "Codice Unico Evento:"       (string "")
+    b <- button (string "Invio")
+    transition b click EmptyAction (seg "home" [] </> seg "resultsbycue" ["cue" <=> value c])
+    sbcp <- hpanel "primary" "fa fa-car fa-5x" h (c <-> b) ee
+    return $ sbcp 
   
 searchbynome = do
-    n <- input  "Codice sinistro:"  (string "")
-    d <- input  "Data inizio:"      (string "")
-    l <- input  "Data fine:"        (string "")
+    h <- label $ string rin
+    n <- input "Codice sinistro:"   (string "")
+    d <- input "Data inizio:"       (string "")
+    l <- input "Data fine:"         (string "")
     c <- input "Codice fiscale:"    (string "")
     b <- button (string "Invio")
+    sbnp <- hpanel "primary" "fa fa-car fa-5x" h (n <-> d <-> l <-> c <-> b) ee
     transition b click EmptyAction (seg "home" [] </> seg "resultsbynome" ["nome" <=> value c])
-    bl <- blank
-    return $ (n 
-         <-> d 
-         <-> l 
-         <-> c
-         <-> b) <|> bl 
+    return $ sbnp
 
 resultsbytarga = do
+    h <- label $ string "Risultati Ricerca Identificativi Veicolo"
     t <- parameter "targa"
     ptable <- htable (parametriByTarga (param t)) showParametriTable
     ph <- label $ string "Parametri di significativita"
-    bl <- blank
-    hp <- hpanel "primary" "fa fa-pie-chart fa-5x" ph ptable bl
+    hp <- hpanel "primary" "fa fa-pie-chart fa-5x" ph ptable ee
     let plotVs v = (v ! "x",v ! "y") 
     c <- chart allVs plotVs
     ps <- label $ string "Dati del sinistro"
     stable <- htable (sinistriByTarga (param t)) showSinistroTable
-    hs <- hpanel "danger" "fa fa-car fa-5x" ps stable bl
-    return $ t <\> hp
-               <-> c
-               <-> hs
-
+    hs <- hpanel "danger" "fa fa-car fa-5x" ps stable ee
+    p <- hpanel "default" "fa fa-car fa-5x" h (hp <-> center c <-> hs) ee
+    return $ t <\> p
+    
+resultsbycue = do
+    c <- parameter "cue"
+    return $ c <\> ee
 
 resultsbynome = do
+    h <- label $ string "Risultati Ricerca per Nominativo"
     n <- parameter "nome"
     stable <- htable (sinistriByNome (param n)) showSinistroTable
-    return $ n <\> stable
+    p <- hpanel "default" "fa fa-car fa-5x" h stable ee
+    return $ n <\> p
 
 showParametriTable v = do
     lric <- label (v ! "Ricorrenze")
@@ -152,11 +172,10 @@ dettagliPersone = do
     h <- label (string "Persone coinvolte nel sinistro")
     -- lid <- label (r ! "idSinistro")
     ptable <- htable (personeBySinistro (param s)) showPersonaTable
-    bl <- blank
     hp <- hpanel "danger" "fa fa-users fa-5x" 
-            h  -- <|> lid <|> bl
+            h  -- <|> lid <|> ee
             ptable
-            bl
+            ee
     return hp
     
 dettagliVeicoli = do
@@ -164,11 +183,10 @@ dettagliVeicoli = do
     h <- label (string "Veicoli coinvolti nel sinistro")
     -- lid <- label (r ! "idSinistro")
     vtable <- htable (dettagliVeicoliBySinistro (param s)) showDettagliVeicoloTable
-    bl <- blank
     hp <- hpanel "danger" "fa fa-car fa-5x"
             h
             vtable
-            bl
+            ee
     return hp
     
 dettagli = do
@@ -227,7 +245,6 @@ showDettagli s = do
     transition bp click EmptyAction (seg "home" [] </> (seg "dettagli" ["sinistro" <=> value lid]  </> seg "persone" ["sinistro" <=> value lid]))
     bv <- button (string "Dettagli")
     transition bv click EmptyAction (seg "home" [] </> (seg "dettagli" ["sinistro" <=> value lid] </> seg "veicoli" ["sinistro" <=> value lid]))
-    bl <- blank
     hp <- hpanel "primary" "fa fa-car fa-5x" (h <|> lid)
                 (lstato
              <-> lluogo
@@ -240,14 +257,13 @@ showDettagli s = do
              <-> ldecessi
              <-> lnumvlab <|> lnumv <|> bv
              <-> lnumplab <|> lnump <|> bp)
-                bl
+                ee
     return $ hp
 
 doubleLabel l1 c l2 = do
     l1' <- label (string l1)
     l2' <- label (c ! l2)
-    bl <- blank
-    return $ l1' <|> l2' <|> bl
+    return $ l1' <|> l2' <|> ee
     
 --------------------- Data ---------------------
 persone = Table "persone" ["idPersona","cognome", "nome", "ragsoc", "luogonasc", "datanasc", "codfisc", "partiva"]
@@ -376,21 +392,29 @@ initRuolipers = do
     into ruolipers
     insert $ "idpers" *=* string "0" : "idsin" *=* string "1" : "ruolo" *=* string "coinvolto" : []        
     insert $ "idpers" *=* string "1" : "idsin" *=* string "1" : "ruolo" *=* string "danneggiato" : []        
+    insert $ "idpers" *=* string "2" : "idsin" *=* string "1" : "ruolo" *=* string "danneggiato" : []        
+    insert $ "idpers" *=* string "2" : "idsin" *=* string "0" : "ruolo" *=* string "coinvolto" : []        
+    insert $ "idpers" *=* string "3" : "idsin" *=* string "0" : "ruolo" *=* string "danneggiato" : []        
     
 initPersone = do
     into persone
     insert $ "idPersona" *=* string "0" : "cognome" *=* string "Rossi" : "nome" *=* string "Mario" : "ragsoc" *=* string "***" : "luogonasc" *=* string "Roma" : "datanasc" *=* string "17/02/1980" : "codfisc" *=* string "RSSMRI80D45H789N" : "partiva" *=* string "***" : []
     insert $ "idPersona" *=* string "1" : "cognome" *=* string "Bianchi" : "nome" *=* string "Sergio" : "ragsoc" *=* string "***" : "luogonasc" *=* string "Roma" : "datanasc" *=* string "17/02/1960" : "codfisc" *=* string "BNCSRG60D45H789N" : "partiva" *=* string "***" : []
+    insert $ "idPersona" *=* string "2" : "cognome" *=* string "Verdi" : "nome" *=* string "Giuseppe" : "ragsoc" *=* string "***" : "luogonasc" *=* string "Roma" : "datanasc" *=* string "17/02/1980" : "codfisc" *=* string "a" : "partiva" *=* string "***" : []
+    insert $ "idPersona" *=* string "3" : "cognome" *=* string "Neri" : "nome" *=* string "Marco" : "ragsoc" *=* string "***" : "luogonasc" *=* string "Roma" : "datanasc" *=* string "17/02/1960" : "codfisc" *=* string "b" : "partiva" *=* string "***" : []
    
 initRuoliveic = do
     into ruoliveic
-    insert $ "idveic" *=* string "a" : "idsin" *=* string "1" : "ruolo" *=* string "coinvolto" : "idcond" *=* string "0" : []        
-    insert $ "idveic" *=* string "b" : "idsin" *=* string "1" : "ruolo" *=* string "danneggiato" : "idcond" *=* string "1" : []        
+    insert $ "idveic" *=* string "AA000AA" : "idsin" *=* string "1" : "ruolo" *=* string "coinvolto" : "idcond" *=* string "0" : []        
+    insert $ "idveic" *=* string "BB000BB" : "idsin" *=* string "1" : "ruolo" *=* string "danneggiato" : "idcond" *=* string "1" : []        
+    insert $ "idveic" *=* string "BB000BB" : "idsin" *=* string "0" : "ruolo" *=* string "danneggiato" : "idcond" *=* string "2" : []        
+    insert $ "idveic" *=* string "CC000CC" : "idsin" *=* string "0" : "ruolo" *=* string "danneggiato" : "idcond" *=* string "3" : []        
     
 initVeicoli = do
     into veicoli
-    insert $ "targa" *=* string "a" : "telaio" *=* string "qwerty" : "dataimm" *=* string "20/05/1988" : "idprop" *=* string "0" : "idcontr" *=* string "0" : "ricorr" *=* string "0" : "v1" *=* string "0" : "v2" *=* string "0" : "v3" *=* string "0" : "v4" *=* string "0" : "v5" *=* string "0" : "v6" *=* string "0" : []
-    insert $ "targa" *=* string "b" : "telaio" *=* string "asdfgh" : "dataimm" *=* string "20/05/1989" : "idprop" *=* string "1" : "idcontr" *=* string "1" : "ricorr" *=* string "0" : "v1" *=* string "1" : "v2" *=* string "1" : "v3" *=* string "2" : "v4" *=* string "1" : "v5" *=* string "3" : "v6" *=* string "0" : []
+    insert $ "targa" *=* string "AA000AA" : "telaio" *=* string "QWERTY" : "dataimm" *=* string "20/05/1988" : "idprop" *=* string "0" : "idcontr" *=* string "0" : "ricorr" *=* string "1" : "v1" *=* string "5" : "v2" *=* string "7" : "v3" *=* string "2" : "v4" *=* string "19" : "v5" *=* string "12" : "v6" *=* string "4" : []
+    insert $ "targa" *=* string "BB000BB" : "telaio" *=* string "ASDFGH" : "dataimm" *=* string "20/05/1989" : "idprop" *=* string "1" : "idcontr" *=* string "1" : "ricorr" *=* string "2" : "v1" *=* string "1" : "v2" *=* string "1" : "v3" *=* string "2" : "v4" *=* string "1" : "v5" *=* string "3" : "v6" *=* string "0" : []
+    insert $ "targa" *=* string "CC000CC" : "telaio" *=* string "ZXCVBN" : "dataimm" *=* string "20/05/1990" : "idprop" *=* string "2" : "idcontr" *=* string "1" : "ricorr" *=* string "1" : "v1" *=* string "1" : "v2" *=* string "1" : "v3" *=* string "2" : "v4" *=* string "1" : "v5" *=* string "3" : "v6" *=* string "0" : []
 
 initUtenti = do
     into utenti
